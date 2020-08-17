@@ -19,12 +19,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
-	"strings"
 	"time"
 
+	kbkb "github.com/omakeno/kbkb/pkg"
 	"github.com/spf13/cobra"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
@@ -98,7 +96,9 @@ func (o *KbkbOptions) Watch(clientset *kubernetes.Clientset) {
 	podInformer := informerFactory.Core().V1().Pods()
 	nodeInformer := informerFactory.Core().V1().Nodes()
 
-	printer := BashOverwritePrinter{row: 0}
+	printer := kbkb.BashOverwritePrinter{
+		Row: 0,
+	}
 
 	informedFunc := func() {
 		pods, err := podInformer.Lister().Pods(o.namespace).List(labels.NewSelector())
@@ -110,8 +110,8 @@ func (o *KbkbOptions) Watch(clientset *kubernetes.Clientset) {
 			panic(err.Error())
 		}
 
-		kf := BuildKubeField(pods, nodes)
-		kf.printAsKbkbOverwrite(&printer)
+		kf := kbkb.BuildKbkbField(pods, nodes)
+		kf.PrintAsKbkbOverwrite(&printer)
 	}
 	podInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    func(obj interface{}) { informedFunc() },
@@ -131,115 +131,6 @@ func (o *KbkbOptions) Watch(clientset *kubernetes.Clientset) {
 		for {
 			time.Sleep(time.Second)
 		}
-	}
-}
-
-type kubeState struct {
-	Color    string
-	IsStable bool
-}
-
-func (ks *kubeState) String() string {
-	return ks.Color
-}
-
-func (ks *kubeState) ColoredString() string {
-	var colorMap = map[string]string{
-		"red":    "\033[0;31m",
-		"green":  "\033[0;32m",
-		"yellow": "\033[0;33m",
-		"blue":   "\033[0;34m",
-		"purple": "\033[0;35m",
-		"white":  "",
-	}
-
-	var iconMap = map[bool]string{
-		true:  "●",
-		false: "o",
-	}
-	return colorMap[ks.Color] + iconMap[ks.IsStable] + "\033[0m"
-}
-
-type kubeField [][]kubeState
-
-func BuildKubeField(p []*v1.Pod, n []*v1.Node) kubeField {
-	var nodes []*v1.Node = make([]*v1.Node, len(n))
-	copy(nodes, n)
-	var pods []*v1.Pod = make([]*v1.Pod, len(p))
-	copy(pods, p)
-
-	sort.Slice(nodes, func(i, j int) bool {
-		if nodes[i].CreationTimestamp.UnixNano() == nodes[j].CreationTimestamp.UnixNano() {
-			return nodes[i].Name < nodes[j].Name
-		} else {
-			return nodes[i].CreationTimestamp.UnixNano() < nodes[j].CreationTimestamp.UnixNano()
-		}
-	})
-	sort.Slice(pods, func(i, j int) bool {
-		if pods[i].CreationTimestamp.UnixNano() == pods[j].CreationTimestamp.UnixNano() {
-			return pods[i].Name < pods[j].Name
-		} else {
-			return pods[i].CreationTimestamp.UnixNano() < pods[j].CreationTimestamp.UnixNano()
-		}
-	})
-
-	var kf [][]kubeState
-	kf = make([][]kubeState, len(nodes))
-
-	nodenameToIndex := map[string]int{}
-	for i, node := range nodes {
-		nodenameToIndex[node.Name] = i
-	}
-
-	for _, pod := range pods {
-		kf[nodenameToIndex[pod.Spec.NodeName]] = append(kf[nodenameToIndex[pod.Spec.NodeName]], getKube(pod))
-	}
-
-	return kubeField(kf)
-}
-
-func (kf kubeField) printAsKbkbOverwrite(p *BashOverwritePrinter) {
-	out := strings.Repeat("-", len(kf)+2) + "\n"
-	i := 0
-	for {
-		line := "|"
-		empty := true
-		for _, col := range kf {
-			if len(col) > i {
-				line += col[i].ColoredString()
-				empty = false
-			} else {
-				line += " "
-			}
-		}
-		out = line + "|\n" + out
-		i++
-		if empty {
-			break
-		}
-	}
-	p.Print(out)
-}
-
-func getKube(pod *v1.Pod) kubeState {
-
-	var IsStable bool = true
-	for _, containerStatus := range pod.Status.ContainerStatuses {
-		if !containerStatus.Ready {
-			IsStable = false
-			break
-		}
-	}
-
-	var color string = "white"
-	c, ok := pod.ObjectMeta.Annotations["kubeColor"]
-	if ok {
-		color = c
-	}
-
-	return kubeState{
-		Color:    color,
-		IsStable: IsStable,
 	}
 }
 
