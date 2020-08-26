@@ -16,13 +16,16 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
+	bashoverwriter "github.com/omakeno/bashoverwriter/pkg"
 	kbkb "github.com/omakeno/kbkb/pkg"
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
@@ -38,6 +41,9 @@ var (
 	
 	# view pods in specified namespace
 	%[1]s kbkb --namespace your-namespace
+
+	# watch pods
+	%[1]s kbkb --watch
 	`
 )
 
@@ -86,9 +92,27 @@ func (o *KbkbOptions) Execute(cmd *cobra.Command, args []string) error {
 		panic(err.Error())
 	}
 
-	o.Watch(clientset)
+	if o.watch {
+		o.Watch(clientset)
+	} else {
+		o.Get(clientset)
+	}
 
 	return nil
+}
+func (o *KbkbOptions) Get(clientset *kubernetes.Clientset) {
+	podList, err := clientset.CoreV1().Pods(o.namespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		panic(err.Error())
+	}
+	nodeList, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		panic(err.Error())
+	}
+
+	kf := kbkb.BuildKbkbFieldFromList(podList, nodeList)
+	writer := bashoverwriter.GetBashoverwriter()
+	kf.PrintAsKbkb(&writer)
 }
 
 func (o *KbkbOptions) Watch(clientset *kubernetes.Clientset) {
@@ -96,7 +120,7 @@ func (o *KbkbOptions) Watch(clientset *kubernetes.Clientset) {
 	podInformer := informerFactory.Core().V1().Pods()
 	nodeInformer := informerFactory.Core().V1().Nodes()
 
-	printer := kbkb.BashOverwritePrinter{Row: 0}
+	writer := bashoverwriter.GetBashoverwriter()
 
 	informedFunc := func() {
 		pods, err := podInformer.Lister().Pods(o.namespace).List(labels.NewSelector())
@@ -109,8 +133,9 @@ func (o *KbkbOptions) Watch(clientset *kubernetes.Clientset) {
 		}
 
 		kf := kbkb.BuildKbkbField(pods, nodes)
-		kf.PrintAsKbkbOverwrite(&printer)
+		kf.PrintAsKbkb(&writer)
 	}
+
 	podInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    func(obj interface{}) { informedFunc() },
 		UpdateFunc: func(oldObj, newObj interface{}) { informedFunc() },
@@ -125,10 +150,8 @@ func (o *KbkbOptions) Watch(clientset *kubernetes.Clientset) {
 	informerFactory.Start(wait.NeverStop)
 	informerFactory.WaitForCacheSync(wait.NeverStop)
 
-	if o.watch {
-		for {
-			time.Sleep(time.Second)
-		}
+	for {
+		time.Sleep(time.Second)
 	}
 }
 

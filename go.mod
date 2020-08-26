@@ -3,7 +3,8 @@ module github.com/omakeno/kubectl-kbkb
 go 1.14
 
 require (
-	github.com/omakeno/kbkb v0.1.6
+	github.com/omakeno/bashoverwriter v0.1.1
+	github.com/omakeno/kbkb v0.1.7
 	github.com/spf13/cobra v1.0.0
 	k8s.io/apimachinery v0.18.6
 	k8s.io/client-go v0.0.0-20200626130735-db5293afc7bf

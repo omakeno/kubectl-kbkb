@@ -181,8 +181,12 @@ github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d/go.mod h1:+n7T8m
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f/go.mod h1:ZdcZmHo+o7JKHSa8/e818NopupXU1YMK5fe1lsApnBw=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
+github.com/omakeno/bashoverwriter v0.1.1 h1:q8n7GLj0r0ZfZwNEwBbBhxQsTQJn+NLckCTdKoGuBFY=
+github.com/omakeno/bashoverwriter v0.1.1/go.mod h1:Tj3wCQw7ykAe6fnFeOyhdmGzYOBpDCgTFCip6otxaS0=
 github.com/omakeno/kbkb v0.1.6 h1:9Ai0RP0c83UBGytHn8Y9kRoB4bkVLfA1NHrPoYryVPM=
 github.com/omakeno/kbkb v0.1.6/go.mod h1:yfyq//svzsUiPkH8CiSuAnE3hGI7l6LL2AbB+Lt12Z8=
+github.com/omakeno/kbkb v0.1.7 h1:AHTkiSCEiFQJhvunV+aCuqkgYMrwGTZLr2p9lit7LQ0=
+github.com/omakeno/kbkb v0.1.7/go.mod h1:yfyq//svzsUiPkH8CiSuAnE3hGI7l6LL2AbB+Lt12Z8=
 github.com/onsi/ginkgo v0.0.0-20170829012221-11459a886d9c/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.11.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
