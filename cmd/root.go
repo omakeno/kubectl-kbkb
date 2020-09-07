@@ -30,6 +30,9 @@ var (
 
 	# watch pods
 	%[1]s kbkb --watch
+
+	# view pods with large size (monospaced font required)
+	%[1]s kbkb --large
 	`
 )
 
@@ -37,6 +40,7 @@ type KbkbOptions struct {
 	namespace  string
 	kubeconfig string
 	watch      bool
+	large      bool
 }
 
 func NewKbkbOptions() *KbkbOptions {
@@ -61,6 +65,7 @@ func CreateCmd() *cobra.Command {
 	rootCmd.PersistentFlags().StringVarP(&o.namespace, "namespace", "n", "default", "specify namespace to show as kbkb format.")
 	rootCmd.PersistentFlags().BoolVarP(&o.watch, "watch", "w", false, "watch kbkb")
 	rootCmd.PersistentFlags().StringVarP(&o.kubeconfig, "kubeconfig", "", filepath.Join(homeDir(), ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	rootCmd.PersistentFlags().BoolVarP(&o.large, "large", "L", false, "view on large size")
 	return rootCmd
 }
 
@@ -98,7 +103,13 @@ func (o *KbkbOptions) Get(clientset *kubernetes.Clientset) {
 
 	kf := kbkb.BuildKbkbFieldFromList(podList, nodeList)
 	writer := bashoverwriter.GetBashoverwriter()
-	kf.PrintAsKbkb(&writer)
+	var kcs kbkb.KbkbCharSet
+	if o.large {
+		kcs = kbkb.GetKbkbCharSetWide()
+	} else {
+		kcs = kbkb.GetKbkbCharSet()
+	}
+	kcs.PrintKbkb(&writer, kf)
 }
 
 func (o *KbkbOptions) Watch(clientset *kubernetes.Clientset) {
@@ -119,7 +130,13 @@ func (o *KbkbOptions) Watch(clientset *kubernetes.Clientset) {
 		}
 
 		kf := kbkb.BuildKbkbField(pods, nodes)
-		kf.PrintAsKbkb(&writer)
+		var kcs kbkb.KbkbCharSet
+		if o.large {
+			kcs = kbkb.GetKbkbCharSetWide()
+		} else {
+			kcs = kbkb.GetKbkbCharSet()
+		}
+		kcs.PrintKbkb(&writer, kf)
 	}
 
 	podInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{

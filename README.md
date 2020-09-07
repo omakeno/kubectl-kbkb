@@ -20,6 +20,8 @@ kubectl kbkb
 
 kubectl kbkb --watch
 
+kubectl kbkb --watch --large
+
 kubectl kbkb --namespace your-namespace
 
 kubectl kbkb --kubeconfig your-kubeconfig
