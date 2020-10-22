@@ -41,6 +41,7 @@ type KbkbOptions struct {
 	kubeconfig string
 	watch      bool
 	large      bool
+	demo       bool
 }
 
 func NewKbkbOptions() *KbkbOptions {
@@ -66,6 +67,7 @@ func CreateCmd() *cobra.Command {
 	rootCmd.PersistentFlags().BoolVarP(&o.watch, "watch", "w", false, "watch kbkb")
 	rootCmd.PersistentFlags().StringVarP(&o.kubeconfig, "kubeconfig", "", filepath.Join(homeDir(), ".kube", "config"), "(optional) absolute path to the kubeconfig file")
 	rootCmd.PersistentFlags().BoolVarP(&o.large, "large", "L", false, "view on large size")
+	rootCmd.PersistentFlags().BoolVarP(&o.demo, "demo", "", false, "demonstrate kbkb with color (label-hash)")
 	return rootCmd
 }
 
@@ -101,7 +103,12 @@ func (o *KbkbOptions) Get(clientset *kubernetes.Clientset) {
 		panic(err.Error())
 	}
 
-	kf := kbkb.BuildKbkbFieldFromList(podList, nodeList)
+	var kf kbkb.KbkbField
+	if o.demo {
+		kf = kbkb.BuildKbkbFieldFromList(podList, nodeList, &kbkb.HashedPodGenerator{})
+	} else {
+		kf = kbkb.BuildKbkbFieldFromList(podList, nodeList, &kbkb.AnnotatedPodGenerator{})
+	}
 	writer := bashoverwriter.GetBashoverwriter()
 	var kcs kbkb.KbkbCharSet
 	if o.large {
@@ -129,7 +136,12 @@ func (o *KbkbOptions) Watch(clientset *kubernetes.Clientset) {
 			panic(err.Error())
 		}
 
-		kf := kbkb.BuildKbkbField(pods, nodes)
+		var kf kbkb.KbkbField
+		if o.demo {
+			kf = kbkb.BuildKbkbField(pods, nodes, &kbkb.HashedPodGenerator{})
+		} else {
+			kf = kbkb.BuildKbkbField(pods, nodes, &kbkb.AnnotatedPodGenerator{})
+		}
 		var kcs kbkb.KbkbCharSet
 		if o.large {
 			kcs = kbkb.GetKbkbCharSetWide()
