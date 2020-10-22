@@ -25,4 +25,6 @@ kubectl kbkb --watch --large
 kubectl kbkb --namespace your-namespace
 
 kubectl kbkb --kubeconfig your-kubeconfig
+
+kubectl kbkb --demo
 ```

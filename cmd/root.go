@@ -33,6 +33,9 @@ var (
 
 	# view pods with large size (monospaced font required)
 	%[1]s kbkb --large
+
+	# color pods by labels, not annotation (for demonstration)
+	%[1]s kbkb --demo
 	`
 )
 
