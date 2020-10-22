@@ -8,7 +8,7 @@ This only works on bash.
 ## Install
 
 ```bash
-wget https://github.com/omakeno/kubectl-kbkb/releases/download/v0.2.3/kubectl-kbkb
+wget https://github.com/omakeno/kubectl-kbkb/releases/download/v0.2.4/kubectl-kbkb
 chmod +x kubectl-kbkb
 sudo cp kubectl-kbkb <your-path>
 ```
